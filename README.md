@@ -7,7 +7,7 @@ A self-contained cyberpunk terminal game built as a harmless cybersecurity simul
 
 ## Project links
 
-- **Live GitHub Pages site:** secret-agent-terminal-zero--parigothi22.replit.app
+- **Live GitHub Pages site:** (https://parii22.github.io/terminal-zero/?utm_source=chatgpt.com)
 - **GitHub repository:** https://github.com/Parii22/terminal-zero
 
 Replace the Pages placeholder with the live URL shown in your repository's Pages settings after publishing.
