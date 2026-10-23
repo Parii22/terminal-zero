@@ -1,0 +1,11 @@
+The function decodeMessage(message, shift) moves letters around the alphabet to change a secret message.
+
+Think of the alphabet like a circular running track. Each letter is a runner. The message is the group of runners, and shift tells them how many steps to move. A positive shift moves letters forward. A negative shift moves them backward. Because the track is circular, going past Z starts again at A (and going backward past A goes to Z).
+
+For example, with a shift of 1, A becomes B and Z becomes A. To decode a message, move the letters backward by the same number of steps that was used to encode it.
+
+The inputs are:
+- message: the word or text whose letters should move.
+- shift: the number of alphabet places to move. It can be positive, zero, or negative.
+
+The output is a new text string with the shifted letters. An empty message stays empty, and a shift of zero leaves the message unchanged. Punctuation, spaces, and numbers are kept as they are.

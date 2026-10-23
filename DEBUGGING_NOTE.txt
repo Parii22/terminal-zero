@@ -1,0 +1,1 @@
+I deliberately misspelled a JavaScript function name, which stopped the function from running, and the browser console error helped me identify the incorrect name and fix the bug.

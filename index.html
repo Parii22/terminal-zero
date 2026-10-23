@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050a07">
+  <meta name="description" content="A fictional, local-only cybersecurity mission simulator by Pari Gothi, Student #097.">
+  <link rel="icon" href="data:,">
+  <title>SECRET AGENT: TERMINAL ZERO</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #050a07;
+      --panel: #09130d;
+      --panel-raised: #0d1a12;
+      --line: #1a3825;
+      --green: #a2ffb6;
+      --bright: #45ff78;
+      --soft: #6ba77c;
+      --dim: #477052;
+      --amber: #ffc56d;
+      --red: #ff8375;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --display: "Arial Narrow", "Liberation Sans Narrow", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--void); scroll-behavior: smooth; }
+    body {
+      min-height: 100vh; margin: 0; color: var(--green); background:
+        radial-gradient(ellipse at 50% -20%, rgba(37, 112, 57, .19), transparent 52%),
+        linear-gradient(180deg, #07100a 0%, var(--void) 72%);
+      font-family: var(--mono); font-size: 13px; letter-spacing: .015em;
+    }
+    body::after {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: .12;
+      background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(122, 255, 155, .035) 4px);
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--bright); outline-offset: 3px; }
+    .matrix { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: .14; pointer-events: none; }
+    .shell { position: relative; z-index: 1; width: min(1120px, calc(100% - 40px)); margin: auto; padding: 20px 0 36px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 7px 0 16px; border-bottom: 1px solid var(--line); color: var(--soft); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--green); }
+    .brand-mark { width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid var(--bright); color: var(--bright); font-size: 12px; box-shadow: inset 0 0 12px #45ff7825; }
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .live-indicator { display: flex; align-items: center; gap: 8px; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bright); box-shadow: 0 0 9px var(--bright); animation: blink 1.8s infinite; }
+    .hero { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; padding: 46px 0 28px; }
+    .eyebrow { color: var(--bright); font-size: 10px; letter-spacing: .22em; text-transform: uppercase; }
+    h1 { margin: 11px 0 8px; color: #d8ffe1; font-family: var(--display); font-size: clamp(34px, 6vw, 66px); line-height: .98; letter-spacing: -.04em; font-weight: 800; text-transform: uppercase; }
+    h1 span { color: var(--bright); text-shadow: 0 0 24px #42ff7830; }
+    .hero-copy { margin: 0; min-height: 20px; max-width: 660px; color: var(--soft); font-size: 12px; line-height: 1.8; }
+    .agent-stamp { border: 1px solid var(--line); padding: 12px 15px; color: var(--soft); font-size: 10px; line-height: 1.8; white-space: nowrap; }
+    .agent-stamp b { color: var(--green); font-weight: 500; }
+    .status-strip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); background: rgba(8, 18, 11, .82); }
+    .metric { min-height: 66px; padding: 12px 17px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+    .metric:last-child { border-right: 0; }
+    .metric-label { color: var(--dim); font-size: 9px; letter-spacing: .18em; text-transform: uppercase; }
+    .metric-value { color: var(--green); font-size: 12px; }
+    .metric-value span { color: var(--bright); }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(265px, .85fr); gap: 14px; margin-top: 14px; align-items: start; }
+    .panel { border: 1px solid var(--line); background: rgba(7, 15, 9, .91); box-shadow: 0 12px 36px rgba(0,0,0,.18); }
+    .panel-head { min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 15px; border-bottom: 1px solid var(--line); background: rgba(14, 28, 18, .5); }
+    .panel-title { display: flex; align-items: center; gap: 9px; color: #bce9c5; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+    .panel-title::before { content: ""; width: 6px; height: 6px; border: 1px solid var(--bright); transform: rotate(45deg); }
+    .head-meta { color: var(--dim); font-size: 9px; letter-spacing: .12em; }
+    .terminal { min-height: 355px; padding: 15px 17px 13px; display: flex; flex-direction: column; }
+    .output { flex: 1; min-height: 260px; max-height: 390px; overflow-y: auto; scrollbar-color: var(--line) transparent; scrollbar-width: thin; }
+    .line { margin: 0 0 8px; color: var(--soft); line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .line.system { color: var(--green); }
+    .line.success { color: var(--bright); }
+    .line.warn { color: var(--amber); }
+    .line.error { color: var(--red); }
+    .line.command { color: #d8ffe1; }
+    .prompt-row { display: flex; align-items: center; gap: 9px; padding-top: 12px; border-top: 1px solid #173020; }
+    .prompt { color: var(--bright); white-space: nowrap; }
+    #commandInput { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #d8ffe1; caret-color: var(--bright); }
+    #commandInput::placeholder { color: #42654a; }
+    .terminal-foot { display: flex; justify-content: space-between; padding-top: 9px; color: #42654a; font-size: 9px; }
+    .side-stack { display: grid; gap: 14px; }
+    .mission-card { padding: 15px; }
+    .mission-name { margin: 0 0 8px; color: #d8ffe1; font-family: var(--display); font-size: 22px; font-weight: 700; letter-spacing: .02em; }
+    .mission-description { margin: 0; color: var(--soft); font-size: 11px; line-height: 1.7; }
+    .mission-state { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 17px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--dim); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+    .state-value { color: var(--amber); }
+    .state-value.complete { color: var(--bright); }
+    .progress-wrap { margin-top: 11px; }
+    .progress-label { display: flex; justify-content: space-between; margin-bottom: 7px; color: var(--dim); font-size: 9px; }
+    .progress-track { height: 4px; background: #14251a; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0%; background: var(--bright); transition: width .55s ease; box-shadow: 0 0 10px #45ff7860; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 13px; }
+    .btn { min-height: 39px; border: 1px solid #285536; background: #0a190f; color: var(--green); cursor: pointer; text-transform: uppercase; letter-spacing: .11em; font-size: 9px; transition: background .18s, border-color .18s, color .18s, transform .18s; }
+    .btn:hover:not(:disabled) { background: #102918; border-color: var(--bright); color: #d8ffe1; transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn.primary { grid-column: 1 / -1; min-height: 45px; border-color: var(--bright); background: var(--bright); color: #061009; font-weight: 700; }
+    .btn.primary:hover:not(:disabled) { background: #b4ffc3; border-color: #b4ffc3; }
+    .btn:disabled { cursor: not-allowed; opacity: .4; }
+    .intel-body { padding: 13px 15px 15px; }
+    .cipher-label { margin: 0 0 7px; color: var(--dim); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; }
+    .cipher-text { min-height: 35px; padding: 9px 10px; background: #07110a; border: 1px solid #173020; color: var(--bright); letter-spacing: .15em; overflow-wrap: anywhere; }
+    .decode-form { display: flex; gap: 7px; margin-top: 9px; }
+    .decode-form input { min-width: 0; flex: 1; height: 36px; padding: 0 10px; border: 1px solid #23432c; background: #07110a; color: #d8ffe1; }
+    .decode-form input::placeholder { color: #42654a; }
+    .decode-form .btn { padding: 0 11px; }
+    .hint { min-height: 31px; margin: 9px 0 0; color: var(--dim); font-size: 10px; line-height: 1.55; }
+    .footer { display: flex; justify-content: space-between; gap: 16px; padding-top: 17px; color: #42654a; font-size: 9px; letter-spacing: .08em; }
+    .footer strong { color: var(--soft); font-weight: 400; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .hidden { display: none !important; }
+    @keyframes blink { 50% { opacity: .35; } }
+    @keyframes appear { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .line { animation: appear .2s ease both; }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 28px, 600px); padding-top: 13px; }
+      .topbar { align-items: flex-start; }
+      .header-right { gap: 10px; flex-direction: column; align-items: flex-end; font-size: 9px; }
+      .hero { grid-template-columns: 1fr; padding: 34px 0 20px; gap: 16px; }
+      .agent-stamp { justify-self: start; }
+      .status-strip { grid-template-columns: 1fr 1fr; }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .workspace { grid-template-columns: 1fr; }
+      .terminal { min-height: 320px; }
+      .output { min-height: 225px; }
+      .side-stack { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="matrix" id="matrix" aria-hidden="true"></canvas>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">Z</span><span>TERMINAL ZERO <span style="color:var(--dim)">/ FIELD CONSOLE</span></span></div>
+      <div class="header-right">
+        <span class="live-indicator"><span class="live-dot" aria-hidden="true"></span>SIMULATION ONLINE</span>
+        <span>Created by Student #097</span>
+      </div>
+    </header>
+
+    <section class="hero" aria-labelledby="title">
+      <div>
+        <div class="eyebrow">Independent training environment · local simulation only</div>
+        <h1 id="title">Secret Agent:<br><span>Terminal Zero</span></h1>
+        <p class="hero-copy" id="intro" aria-live="polite"></p>
+      </div>
+      <div class="agent-stamp"><div>AGENT <b>PARI GOTHI</b></div><div>IDENTITY <b>STUDENT #097</b></div><div>AUTH <b>TRAINING ONLY</b></div></div>
+    </section>
+
+    <section class="status-strip" aria-label="Simulation status">
+      <div class="metric"><span class="metric-label">Mission</span><span class="metric-value" id="metricMission">Awaiting start</span></div>
+      <div class="metric"><span class="metric-label">Connection</span><span class="metric-value"><span>●</span> Sandbox / local</span></div>
+      <div class="metric"><span class="metric-label">Cipher key</span><span class="metric-value">ROT-03 <span>●</span></span></div>
+      <div class="metric"><span class="metric-label">Clearance</span><span class="metric-value" id="metricClearance">Trainee</span></div>
+    </section>
+
+    <div class="workspace">
+      <section class="panel" aria-labelledby="terminalHeading">
+        <div class="panel-head"><div class="panel-title" id="terminalHeading">Interactive terminal</div><div class="head-meta">LOCAL SIM // 127.0.0.1</div></div>
+        <div class="terminal">
+          <div class="output" id="output" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0"></div>
+          <form class="prompt-row" id="commandForm" autocomplete="off">
+            <label class="prompt" for="commandInput">agent@zero:~$</label>
+            <input id="commandInput" name="command" type="text" spellcheck="false" aria-label="Enter a terminal command" placeholder="type help to see available commands" disabled>
+          </form>
+          <div class="terminal-foot"><span>ENTER TO EXECUTE</span><span>ALL OUTPUT IS SIMULATED</span></div>
+        </div>
+      </section>
+
+      <aside class="side-stack" aria-label="Mission controls and cipher">
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Mission brief</div><div class="head-meta">OP-097</div></div>
+          <div class="mission-card">
+            <h2 class="mission-name">Echoes in the Grid</h2>
+            <p class="mission-description">A fictional training beacon left a coded phrase in the sandbox. Inspect the simulated signal, then decode the note to confirm the all-clear.</p>
+            <div class="mission-state"><span>Operation status</span><span class="state-value" id="missionState">STANDBY</span></div>
+            <div class="progress-wrap"><div class="progress-label"><span>Mission progress</span><span id="progressText">0%</span></div><div class="progress-track" role="progressbar" aria-label="Mission progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar" id="progressBar"></div></div></div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="startBtn" type="button">▶ &nbsp; Start mission</button>
+            <button class="btn" id="helpBtn" type="button">Help</button>
+            <button class="btn" id="resetBtn" type="button">Reset</button>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><div class="panel-title">Cipher desk</div><div class="head-meta">MINI CHALLENGE</div></div>
+          <div class="intel-body">
+            <p class="cipher-label">Intercepted message</p>
+            <div class="cipher-text" id="cipherText" aria-label="Encrypted message">LOCKED — RUN SCAN</div>
+            <form class="decode-form" id="decodeForm">
+              <label class="sr-only" for="decodeInput">Decoded message</label>
+              <input id="decodeInput" type="text" autocomplete="off" spellcheck="false" placeholder="Enter decoded phrase" disabled>
+              <button class="btn" id="decodeBtn" type="submit" disabled>Verify</button>
+            </form>
+            <p class="hint" id="hint" aria-live="polite">Start the mission, then use the terminal to inspect the signal.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <footer class="footer"><span><strong>TRAINING SIMULATOR</strong> · No external systems are contacted.</span><span>V. 0.97 <span aria-hidden="true">/</span> © PARI GOTHI</span></footer>
+  </main>
+  <script>
+    "use strict";
+
+    // A common debugging slip is calling `decdoeMessage()` instead of `decodeMessage()`: the console would report a ReferenceError because that misspelled name is undefined. Compare the spelling with the function declaration and correct the call to `decodeMessage()`; this example is documentation only and introduces no runtime bug.
+
+    // Imagine the alphabet is a circular running track, and every letter is a runner moving forward or backward a certain number of steps!
+    function decodeMessage(message, shift) {
+      if (typeof message !== "string" || message.length === 0) return "";
+      const normalizedShift = ((Number(shift) % 26) + 26) % 26;
+      return message.replace(/[a-z]/gi, function (letter) {
+        const base = letter === letter.toUpperCase() ? 65 : 97;
+        return String.fromCharCode(((letter.charCodeAt(0) - base - normalizedShift + 26) % 26) + base);
+      });
+    }
+
+    const TARGET = "THE SIGNAL IS SAFE";
+    const CIPHER = "WKH VLJQDO LV VDIH";
+    const output = document.getElementById("output");
+    const commandInput = document.getElementById("commandInput");
+    const commandForm = document.getElementById("commandForm");
+    const startBtn = document.getElementById("startBtn");
+    const missionState = document.getElementById("missionState");
+    const metricMission = document.getElementById("metricMission");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const progressTrack = document.querySelector('[role="progressbar"]');
+    const cipherText = document.getElementById("cipherText");
+    const decodeInput = document.getElementById("decodeInput");
+    const decodeBtn = document.getElementById("decodeBtn");
+    const hint = document.getElementById("hint");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let started = false;
+    let scanned = false;
+    let unlocked = false;
+    let complete = false;
+    let progress = 0;
+    let timers = [];
+
+    function addLine(text, type) {
+      const line = document.createElement("p");
+      line.className = "line " + (type || "");
+      line.textContent = text;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function setProgress(value) {
+      progress = Math.max(progress, Math.min(100, value));
+      progressBar.style.width = progress + "%";
+      progressText.textContent = progress + "%";
+      progressTrack.setAttribute("aria-valuenow", String(progress));
+    }
+
+    function pause(ms) {
+      return new Promise(function (resolve) {
+        const timer = window.setTimeout(resolve, reducedMotion ? 0 : ms);
+        timers.push(timer);
+      });
+    }
+
+    async function animateLines(lines) {
+      for (const item of lines) {
+        if (!started) return;
+        await pause(360);
+        if (!started) return;
+        addLine(item.text, item.type);
+      }
+    }
+
+    function showHelp() {
+      addLine("AVAILABLE COMMANDS", "system");
+      addLine("help     — list available training commands");
+      addLine("scan     — inspect the fictional sandbox beacon");
+      addLine("decrypt  — open the local cipher challenge");
+      addLine("status   — view mission progress");
+      addLine("clear    — clear terminal output");
+      addLine("No command reaches a real network or system.", "warn");
+    }
+
+    function startMission() {
+      if (started) return;
+      started = true;
+      startBtn.disabled = true;
+      startBtn.textContent = "MISSION ACTIVE";
+      commandInput.disabled = false;
+      commandInput.placeholder = "enter a command…";
+      missionState.textContent = "IN PROGRESS";
+      missionState.classList.remove("complete");
+      metricMission.textContent = "Echoes in the Grid";
+      setProgress(8);
+      addLine(">> SECURE TRAINING CHANNEL OPEN", "success");
+      addLine("Welcome, Agent Pari Gothi. This is a fictional local simulation.", "system");
+      addLine("Objective: scan the beacon, decrypt its message, verify the all-clear.", "system");
+      addLine("Type help or choose a command below.", "warn");
+      commandInput.focus();
+    }
+
+    async function doScan() {
+      if (!started) { addLine("Start the mission first with the Start mission button.", "warn"); return; }
+      if (scanned) { addLine("Beacon already inspected. The local signal is ready for decryption.", "warn"); return; }
+      scanned = true;
+      addLine("scan", "command");
+      addLine("Opening fictional sandbox beacon…", "system");
+      setProgress(24);
+      await animateLines([
+        { text: "[SIM] Checking training node: ECHO-097", type: "" },
+        { text: "[SIM] Beacon integrity: stable", type: "success" },
+        { text: "[SIM] Intercept recovered. Cipher desk unlocked.", type: "success" }
+      ]);
+      if (!started) return;
+      cipherText.textContent = CIPHER;
+      decodeInput.disabled = false;
+      decodeBtn.disabled = false;
+      hint.textContent = "ROT-03: move each letter three places backward. Enter the phrase to verify.";
+      setProgress(55);
+      commandInput.focus();
+    }
+
+    async function doDecrypt() {
+      if (!started) { addLine("Start the mission before decrypting.", "warn"); return; }
+      if (!scanned) { addLine("No beacon data yet. Run scan first.", "warn"); return; }
+      if (complete) { addLine("Message already verified. Mission complete.", "success"); return; }
+      addLine("decrypt", "command");
+      addLine("Applying ROT-03 locally…", "system");
+      await animateLines([
+        { text: "Cipher: " + CIPHER, type: "" },
+        { text: "Use the cipher desk to submit your decoded phrase.", type: "warn" }
+      ]);
+      if (started) { unlocked = true; setProgress(72); decodeInput.focus(); }
+    }
+
+    async function finishMission() {
+      complete = true;
+      unlocked = false;
+      missionState.textContent = "COMPLETE";
+      missionState.classList.add("complete");
+      metricMission.textContent = "Complete";
+      document.getElementById("metricClearance").textContent = "Agent / verified";
+      setProgress(86);
+      hint.textContent = "Phrase verified. All-clear confirmed in the local simulation.";
+      decodeInput.disabled = true;
+      decodeBtn.disabled = true;
+      addLine(">> DECODE ACCEPTED: " + TARGET, "success");
+      addLine("Training beacon confirms the sandbox is safe.", "system");
+      await animateLines([
+        { text: "Finalizing simulated mission report…", type: "" },
+        { text: "MISSION COMPLETE — excellent work, Agent 097.", type: "success" }
+      ]);
+      if (complete) setProgress(100);
+    }
+
+    function runCommand(raw) {
+      const parts = raw.trim().toLowerCase().split(/\s+/);
+      const command = parts[0];
+      if (!command) return;
+      if (command === "clear") { output.replaceChildren(); return; }
+      if (command === "help") { showHelp(); return; }
+      if (command === "status") {
+        addLine("status", "command");
+        addLine("MISSION: " + (complete ? "COMPLETE" : started ? "ACTIVE" : "STANDBY") + " | SCAN: " + (scanned ? "DONE" : "PENDING") + " | DECODE: " + (complete ? "VERIFIED" : "PENDING") + " | PROGRESS: " + progress + "%", "system");
+        addLine("ENVIRONMENT: local fictional sandbox; no network activity.", "warn");
+        return;
+      }
+      if (command === "scan") { doScan(); return; }
+      if (command === "decrypt") { doDecrypt(); return; }
+      addLine("Unknown command: " + raw.trim() + ". Type help to see the available commands.", "error");
+    }
+
+    commandForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const value = commandInput.value;
+      if (!value.trim()) return;
+      addLine("agent@zero:~$ " + value.trim(), "command");
+      commandInput.value = "";
+      runCommand(value);
+    });
+    startBtn.addEventListener("click", startMission);
+    document.getElementById("helpBtn").addEventListener("click", function () {
+      if (!started) addLine("Start the mission to activate the training console.", "warn");
+      showHelp();
+      commandInput.focus();
+    });
+    document.getElementById("resetBtn").addEventListener("click", function () {
+      timers.forEach(window.clearTimeout);
+      timers = [];
+      started = false; scanned = false; unlocked = false; complete = false;
+      output.replaceChildren();
+      startBtn.disabled = false;
+      startBtn.textContent = "▶  Start mission";
+      commandInput.disabled = true;
+      commandInput.value = "";
+      commandInput.placeholder = "type help to see available commands";
+      missionState.textContent = "STANDBY";
+      missionState.classList.remove("complete");
+      metricMission.textContent = "Awaiting start";
+      document.getElementById("metricClearance").textContent = "Trainee";
+      cipherText.textContent = "LOCKED — RUN SCAN";
+      decodeInput.value = "";
+      decodeInput.disabled = true;
+      decodeBtn.disabled = true;
+      hint.textContent = "Start the mission, then use the terminal to inspect the signal.";
+      setProgress(0);
+      addLine("Terminal reset. Ready for a new local simulation.", "system");
+    });
+
+    document.getElementById("decodeForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (!started || !scanned) {
+        hint.textContent = "Run scan from the terminal before submitting a phrase.";
+        return;
+      }
+      if (!unlocked) {
+        hint.textContent = "Type decrypt in the terminal to open the cipher challenge.";
+        return;
+      }
+      const answer = decodeInput.value.trim().replace(/\s+/g, " ").toUpperCase();
+      if (answer === decodeMessage(CIPHER, 3)) {
+        finishMission();
+      } else {
+        hint.textContent = "Not quite. ROT-03 means shift each letter three places backward.";
+        addLine("Cipher check failed. Recheck the ROT-03 shift and try again.", "error");
+        decodeInput.select();
+      }
+    });
+
+    const introText = "A quiet signal. A sealed message. One training run to bring the beacon home.";
+    const introNode = document.getElementById("intro");
+    let introIndex = 0;
+    function typeIntro() {
+      if (introIndex < introText.length) {
+        introNode.textContent += introText.charAt(introIndex++);
+        window.setTimeout(typeIntro, reducedMotion ? 0 : 28);
+      }
+    }
+    typeIntro();
+    addLine("Terminal standby. Press Start mission to begin.", "system");
+
+    // Decorative Matrix-style rain: characters are generated locally and never represent real traffic.
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+    let drops = [];
+    const glyphs = "01アイウエオカキクケコ";
+    function resizeMatrix() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * ratio);
+      canvas.height = Math.floor(window.innerHeight * ratio);
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      drops = Array.from({ length: Math.ceil(window.innerWidth / 19) }, function () {
+        return Math.random() * -window.innerHeight / 18;
+      });
+    }
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(5, 10, 7, 0.09)";
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.fillStyle = "#75ff91";
+      ctx.font = "12px monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const character = glyphs.charAt(Math.floor(Math.random() * glyphs.length));
+        ctx.fillText(character, i * 19, drops[i] * 18);
+        if (drops[i] * 18 > window.innerHeight && Math.random() > .975) drops[i] = 0;
+        drops[i] += .42;
+      }
+      if (!reducedMotion) window.requestAnimationFrame(drawMatrix);
+    }
+    resizeMatrix();
+    if (reducedMotion) {
+      drawMatrix();
+    } else {
+      window.requestAnimationFrame(drawMatrix);
+    }
+    window.addEventListener("resize", resizeMatrix, { passive: true });
+
+    console.assert(decodeMessage("Wkh txlfn eurzq ira!", 3) === "The quick brown fox!", "Caesar decode handles ordinary text.");
+    console.assert(decodeMessage("", 3) === "", "Caesar decode handles empty input.");
+    console.assert(decodeMessage("Ebiil, Z!" , -3) === "Hello, C!", "Caesar decode handles negative shifts.");
+  </script>
+</body>
+</html>
